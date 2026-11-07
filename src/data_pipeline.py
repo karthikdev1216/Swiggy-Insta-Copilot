@@ -64,19 +64,48 @@ def clean_data():
             df.to_sql(name,con,if_exists="replace",index=False)
     return {"customers":cust,"products":prod,"orders":orders}
 def validate():
-    c=pd.read_csv(CLEAN/"customers.csv"); o=pd.read_csv(CLEAN/"orders.csv",keep_default_na=False)
-    assert c.city.nunique()==6
-    assert set(c.gender.unique())<={"male","female","unknown"}
-    assert c.age.notna().all() and c.age.between(18,60).all()
+    c = pd.read_csv(CLEAN / "customers.csv")
+    o = pd.read_csv(CLEAN / "orders.csv", keep_default_na=False)
+
+    assert c.city.nunique() == 6
+    assert set(c.gender.unique()) <= {"male", "female", "unknown"}
+    assert c.age.notna().all() and c.age.between(18, 60).all()
     assert o.order_id.is_unique
     assert not o.status.eq("pending").any()
-    assert pd.to_numeric(o.order_amount,errors="coerce").notna().all()
-    d=pd.to_numeric(o.loc[o.status.eq("completed"),"delivery_minutes"],errors="coerce")
+    assert pd.to_numeric(o.order_amount, errors="coerce").notna().all()
+
+    d = pd.to_numeric(
+        o.loc[o.status.eq("completed"), "delivery_minutes"],
+        errors="coerce"
+    )
     assert d.notna().all()
-    assert pd.to_numeric(o.loc[o.status.eq("cancelled"),"delivery_minutes"],errors="coerce").isna().all()
+
+    assert pd.to_numeric(
+        o.loc[o.status.eq("cancelled"), "delivery_minutes"],
+        errors="coerce"
+    ).isna().all()
+
     with sqlite3.connect(DB) as con:
-        names={r[0] for r in con.execute("select name from sqlite_master where type='table'")}
-        assert {"customers","products","orders"}<=names
+        names = {
+            r[0] for r in con.execute(
+                "select name from sqlite_master where type='table'"
+            )
+        }
+        assert {"customers", "products", "orders"} <= names
+
+    # Display cleaning results
+    print("Reference after cleaning:")
+
+    print("Cities:", c["city"].value_counts().to_dict())
+    print("Genders:", c["gender"].value_counts().to_dict())
+    print("Missing ages:", c["age"].isna().sum())
+    print(
+        "Age range:",
+        c["age"].min(),
+        "to",
+        c["age"].max()
+    )
+
     print("ALL CHECKPOINTS PASSED")
 if __name__=="__main__":
     audit(); clean_data(); validate()

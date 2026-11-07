@@ -1,11 +1,19 @@
 """Run all project stages in sequence. Use this after installing requirements."""
 from src.data_pipeline import audit,clean_data,validate
+from src.sql_analysis import run_sql_analysis
+from src.eda_analysis import run_eda_analysis
 from src.customer_models import rfm_and_segments,build_lapse_model
 from src.triage import run_pipeline,FEW
 from src.policy_rag import PolicyRAG,evaluate
 def main():
     print("\n=== PART A: AUDIT / CLEAN / VALIDATE ===")
     audit(); clean_data(); validate()
+    print("\n=== SQL ANALYSIS ===")
+    sql_results = run_sql_analysis()
+    print("SQL Analysis Results:")
+    print(sql_results)
+    print("\n=== EXPLORATORY DATA ANALYSIS ===")
+    eda_results = run_eda_analysis(sql_results["revenue"])
     print("\n=== PART B: SEGMENTS ===")
     rfm,diagnostics,profile,pca=rfm_and_segments()
     print("K-means diagnostics:\n",diagnostics.to_string(index=False))
