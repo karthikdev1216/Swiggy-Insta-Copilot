@@ -248,7 +248,7 @@ def _write_part_d_readme(
     resume_tools,
     resume_status,
 ):
-    """Append/replace an auto-generated Part D report in README.md."""
+    """Idempotently replace the auto-generated Part D report in README.md."""
     readme_path = ROOT / "README.md"
     existing = (
         readme_path.read_text(encoding="utf-8")
@@ -363,11 +363,38 @@ def _write_part_d_readme(
     ])
 
     block = "\n".join(lines)
-    if start_marker in existing and end_marker in existing:
-        before = existing.split(start_marker, 1)[0]
-        after = existing.split(end_marker, 1)[1]
-        updated = before.rstrip() + "\n\n" + block + after
+
+    # Remove every previous auto-generated Part D block before inserting the
+    # latest one. Accept the legacy end marker too, so older README versions
+    # are repaired instead of causing another report to be appended.
+    import re
+
+    legacy_end_marker = r"<!--\s*PART D\s+END\s*-->"
+    block_pattern = re.compile(
+        re.escape(start_marker)
+        + r".*?(?:"
+        + re.escape(end_marker)
+        + r"|"
+        + legacy_end_marker
+        + r")",
+        flags=re.DOTALL,
+    )
+
+    first_start = existing.find(start_marker)
+    if first_start >= 0:
+        before = existing[:first_start]
+        remainder = existing[first_start:]
+        remainder_without_reports = block_pattern.sub("", remainder)
+        # Preserve any manually written content that followed the generated
+        # section, while keeping a clean blank line around the new report.
+        suffix = remainder_without_reports.lstrip("\r\n")
+        updated = before.rstrip() + "\n\n" + block
+        if suffix.strip():
+            updated += "\n\n" + suffix.rstrip() + "\n"
+        else:
+            updated += "\n"
     else:
+        # First run: append the generated section after the existing README.
         updated = existing.rstrip() + "\n\n" + block + "\n"
 
     readme_path.write_text(updated, encoding="utf-8")

@@ -163,4 +163,4 @@ The measured ReAct runs use multiple model calls when the workflow needs several
 
 All simulated requests are treated as having been raised within the policy's 7-day window, as specified in the assignment. The supplied order database does not contain a separate refund-request timestamp with which to independently validate that window.
 
-<!-- PART D  END -->
+<!-- PART D AUTO-REPORT END -->
