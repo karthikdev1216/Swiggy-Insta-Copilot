@@ -1,4 +1,4 @@
-"""Offline deterministic LLM stand-in used for teaching. No API key/network needed."""
+"""Offline deterministic LLM . No API key/network needed."""
 import json, math, re
 from types import SimpleNamespace as NS
 class TransientLLMError(Exception):

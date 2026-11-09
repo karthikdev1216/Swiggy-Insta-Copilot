@@ -1,9 +1,14 @@
 """Part D (retrieval): chunk policy files, TF-IDF search and grounded answers."""
 from pathlib import Path
+import sys
 import re
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 import mock_llm
 ROOT=Path(__file__).resolve().parents[1]; POL=ROOT/"data/policies"
 class PolicyRAG:
